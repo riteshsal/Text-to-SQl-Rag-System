@@ -64,10 +64,11 @@ def clean_json_response(content: str):
 
     return json.loads(content)
 
-def query_understanding_agent(state:SQLState):
+def query_understanding_agent(state: SQLState):
     try:
-        question=state['question']
-        prompt=ChatPromptTemplate.from_template(
+        question = state["question"]
+
+        prompt = ChatPromptTemplate.from_template(
             """
             You are a Query Understanding Agent for a Text-to-SQL system.
 
@@ -83,32 +84,47 @@ def query_understanding_agent(state:SQLState):
             8. limit
             9. date_range
 
-            Also be strict to these rules:
             Rules:
-            - Generate only SELECT queries.
-            - Use only tables and columns from the provided schema.
-            - Do not invent table or column names.
-            - If the question cannot be answered using ONLY the tables and columns 
-            in the schema below, return exactly this text and nothing else: 
-            NOT_ANSWERABLE
+            - The question must be answerable using the database schema.
+            - If the question is unrelated to the database, return exactly:
+              NOT_ANSWERABLE
+            - If the question requires tables or columns that do not exist in the schema, return exactly:
+              NOT_ANSWERABLE
 
-            Return ONLY valid JSON.
+            Return ONLY valid JSON or exactly NOT_ANSWERABLE.
 
             User question:
             {question}
             """
         )
 
-        chain=prompt|llm
-        response=chain.invoke({"question":question})
-        understanding=clean_json_response(response.content)
+        chain = prompt | llm
+
+        response = chain.invoke({
+            "question": question
+        })
+
+        content = response.content.strip()
+
+        # Handle questions outside the database scope
+        if content == "NOT_ANSWERABLE":
+            raise ValueError(
+                "I can only answer questions related to the database."
+            )
+
+        understanding = clean_json_response(content)
 
         return {
-            "understanding":understanding
+            "understanding": understanding
         }
-    except Exception as e:
-        raise QueryUnderstandingError(f"Failed to understand the query: {str(e)}")
 
+    except ValueError as e:
+        raise QueryUnderstandingError(str(e))
+
+    except Exception as e:
+        raise QueryUnderstandingError(
+            f"Failed to understand the query: {str(e)}"
+        )
 #sql generation agent
 def clean_sql_response(content: str):
     content = content.strip()
@@ -160,11 +176,6 @@ def sql_generation_agent(state:SQLState):
 
         if not sql:
             raise SQLGenerationError("SQL query could not be generated")
-
-        if sql.strip() == "NOT_ANSWERABLE":
-            raise SQLGenerationError(
-        "This question cannot be answered using the available database schema."
-        )
 
         return {
             "sql":sql
