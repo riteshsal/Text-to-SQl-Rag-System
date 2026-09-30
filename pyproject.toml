@@ -16,6 +16,7 @@ dependencies = [
     "psycopg2-binary>=2.9.13",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
+    "streamlit>=1.64.0",
     "uvicorn>=0.54.0",
 ]
 
