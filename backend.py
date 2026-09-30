@@ -83,6 +83,15 @@ def query_understanding_agent(state:SQLState):
             8. limit
             9. date_range
 
+            Also be strict to these rules:
+            Rules:
+            - Generate only SELECT queries.
+            - Use only tables and columns from the provided schema.
+            - Do not invent table or column names.
+            - If the question cannot be answered using ONLY the tables and columns 
+            in the schema below, return exactly this text and nothing else: 
+            NOT_ANSWERABLE
+
             Return ONLY valid JSON.
 
             User question:
@@ -151,6 +160,11 @@ def sql_generation_agent(state:SQLState):
 
         if not sql:
             raise SQLGenerationError("SQL query could not be generated")
+
+        if sql.strip() == "NOT_ANSWERABLE":
+            raise SQLGenerationError(
+        "This question cannot be answered using the available database schema."
+        )
 
         return {
             "sql":sql
