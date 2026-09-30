@@ -41,16 +41,16 @@ class SQLState(TypedDict):
 class SQLGenerationError(Exception):
     pass
 
-
 class UnsafeSQLError(Exception):
     pass
-
 
 class DatabaseError(Exception):
     pass
 
+class QueryUnderstandingError(Exception):
+    pass
 
-class NoRecordsFound(Exception):
+class AnswerGenerationError(Exception):
     pass
 
 
@@ -65,37 +65,40 @@ def clean_json_response(content: str):
     return json.loads(content)
 
 def query_understanding_agent(state:SQLState):
-    question=state['question']
-    prompt=ChatPromptTemplate.from_template(
-        """
-        You are a Query Understanding Agent for a Text-to-SQL system.
+    try:
+        question=state['question']
+        prompt=ChatPromptTemplate.from_template(
+            """
+            You are a Query Understanding Agent for a Text-to-SQL system.
 
-        Analyze the user's natural language question and identify:
+            Analyze the user's natural language question and identify:
 
-        1. intent
-        2. relevant tables
-        3. relevant columns
-        4. filters
-        5. aggregation
-        6. group_by
-        7. order_by
-        8. limit
-        9. date_range
+            1. intent
+            2. relevant tables
+            3. relevant columns
+            4. filters
+            5. aggregation
+            6. group_by
+            7. order_by
+            8. limit
+            9. date_range
 
-        Return ONLY valid JSON.
+            Return ONLY valid JSON.
 
-        User question:
-        {question}
-        """
-    )
+            User question:
+            {question}
+            """
+        )
 
-    chain=prompt|llm
-    response=chain.invoke({"question":question})
-    understanding=clean_json_response(response.content)
+        chain=prompt|llm
+        response=chain.invoke({"question":question})
+        understanding=clean_json_response(response.content)
 
-    return {
-        "understanding":understanding
-    }
+        return {
+            "understanding":understanding
+        }
+    except Exception as e:
+        raise QueryUnderstandingError(f"Failed to understand the query: {str(e)}")
 
 #sql generation agent
 def clean_sql_response(content: str):
@@ -157,8 +160,6 @@ def sql_generation_agent(state:SQLState):
 
 
 #sql execution agent
-import re
-
 def validate_sql(sql: str):
     sql = sql.strip()
 
@@ -267,7 +268,7 @@ def answer_agent(state:SQLState):
             "answer": answer
         }
     except Exception as e:
-        raise Exception(f"Answer failed: {str(e)}")
+        raise AnswerGenerationError(f"Answer failed: {str(e)}")
 
 
 

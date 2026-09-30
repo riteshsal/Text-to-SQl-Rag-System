@@ -2,7 +2,15 @@ from fastapi import FastAPI, HTTPException, Request ,Security
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from fastapi.security import HTTPBearer
-from backend import graph, build_initial_state
+from backend import (
+    graph,
+    build_initial_state,
+    UnsafeSQLError,
+    SQLGenerationError,
+    QueryUnderstandingError,
+    DatabaseError,
+    AnswerGenerationError,
+)
 import re
 
 app = FastAPI()
@@ -146,9 +154,25 @@ def ask(
     except HTTPException:
         raise
 
-    except Exception as e:
+    except HTTPException:
+        raise
 
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+    except UnsafeSQLError as e:
+            # The generated SQL itself was rejected - a bad/unsafe request
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except (QueryUnderstandingError, SQLGenerationError) as e:
+            # The AI couldn't turn the question into a valid query.
+        raise HTTPException(status_code=422, detail=str(e))
+
+    except DatabaseError as e:
+            # The query was valid and safe, but actually failed to run.
+        raise HTTPException(status_code=500, detail=str(e))
+
+    except AnswerGenerationError as e:
+            # SQL succeeded, but the final LLM write-up failed.
+        raise HTTPException(status_code=500, detail=str(e))
+
+    except Exception as e:
+            # True catch-all for anything genuinely unexpected.
+        raise HTTPException(status_code=500, detail=str(e))
