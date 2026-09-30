@@ -20,7 +20,7 @@ if not GROQ_API_KEY:
 
 #llm
 llm=ChatGroq(
-    model="openai/gpt-oss-20b"
+    model="openai/gpt-oss-120b"
     )
 
 #database connection
@@ -217,7 +217,7 @@ def sql_execution_agent(state: SQLState):
 
     except Exception as e:
         raise DatabaseError(
-            f"Database query failed: {str(e)}"
+            f"The requested information is not available in the database."
         )
 
     finally:
@@ -301,8 +301,9 @@ graph_builder.add_edge("answer", END)
 
 graph = graph_builder.compile()
 
-result = graph.invoke(
+"""result = graph.invoke(
     build_initial_state("Show all employees who work in the Sales department.")
 )
 
 print(result["answer"])
+"""
