@@ -53,7 +53,7 @@ Text-to-SQl-Rag-System/
 └── uv.lock
 
 
-## Installation
+# Installation
 
 1.Clone the repository and move into the project directory:
 
