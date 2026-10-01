@@ -45,11 +45,6 @@ CREATE TABLE order_items (
     subtotal      NUMERIC(10, 2) NOT NULL CHECK (subtotal >= 0)
 );
 
--- =========================================================
--- Indexes on foreign keys and commonly filtered/joined columns.
--- Worth mentioning in an interview: without these, joins and
--- date-range filters on large tables would do full table scans.
--- =========================================================
 
 CREATE INDEX idx_orders_customer_id   ON orders(customer_id);
 CREATE INDEX idx_orders_employee_id   ON orders(employee_id);

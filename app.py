@@ -24,9 +24,7 @@ USERS = {
 }
 
 
-# --------------------------------------------------
 # Authentication Middleware
-# --------------------------------------------------
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
@@ -70,7 +68,6 @@ async def auth_middleware(request: Request, call_next):
             )
 
         # Store authenticated user's role
-        # so /ask can access it
         request.state.role = role
 
          # Unsafe / write request check
@@ -104,9 +101,8 @@ async def auth_middleware(request: Request, call_next):
     return response
 
 
-# --------------------------------------------------
+
 # Request Model
-# --------------------------------------------------
 
 class AskRequest(BaseModel):
     question: str
@@ -119,11 +115,10 @@ def ask(
     credentials=Security(security)
 ):
 
-    # Role was added by authentication middleware
+    
     role = http_request.state.role
 
     try:
-        # Run LangGraph
         result = graph.invoke(
             build_initial_state(request.question)
         )
