@@ -51,7 +51,7 @@ Text-to-SQl-Rag-System/
 ├── requirements.txt
 ├── README.md
 └── uv.lock
-
+```
 
 # Installation
 
