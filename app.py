@@ -73,6 +73,32 @@ async def auth_middleware(request: Request, call_next):
         # so /ask can access it
         request.state.role = role
 
+         # Unsafe / write request check
+        if request.method == "POST":
+
+            body = await request.json()
+            question = body.get("question", "")
+
+            forbidden_words = [
+                "delete",
+                "drop",
+                "update",
+                "insert",
+                "truncate",
+                "alter",
+                "create"
+            ]
+
+            question_lower = question.lower()
+
+            if any(word in question_lower for word in forbidden_words):
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "detail": "Unsafe or write-enabled SQL query is not allowed."
+                    }
+                )
+
     response = await call_next(request)
 
     return response
