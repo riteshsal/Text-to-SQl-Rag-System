@@ -223,32 +223,53 @@ The application handles common errors during the Text-to-SQL workflow.
 
 
 ## Authentication/Authorization middleware flow
-User
-  ↓
-Streamlit UI
-  ↓
-Bearer Token
-  ↓
-FastAPI Middleware
-  ↓
-Check token
-  ├── Missing/Invalid → 401
-  │
-  └── Valid
-        ↓
-     Identify Role
-        ↓
-   Check request/question
-        ↓
-   /ask endpoint
-        ↓
-   LangGraph workflow
-        ↓
-   Response based on role
-        ├── Admin   → Answer + SQL + Schema + Result
-        ├── Analyst → Answer + SQL + Schema + Result
-        └── Viewer  → Answer only
+## Authentication/Authorization Middleware Flow
 
+```text
+User
+  |
+  v
+Streamlit UI
+  |
+  v
+Bearer Token
+  |
+  v
+FastAPI Middleware
+  |
+  v
+Check Token
+  |
+  +----------------------+
+  |                      |
+  v                      v
+Invalid/Missing         Valid Token
+  |                      |
+  v                      v
+401 Unauthorized       Identify Role
+                         |
+                         v
+                  Check Request/Question
+                         |
+                         v
+                    /ask Endpoint
+                         |
+                         v
+                  LangGraph Workflow
+                         |
+                         v
+                  Response Based on Role
+                         |
+              +----------+----------+
+              |          |          |
+              v          v          v
+           Admin      Analyst     Viewer
+              |          |          |
+              v          v          v
+       Answer + SQL  Answer + SQL  Answer Only
+       + Schema      + Schema
+       + Result      + Result
+```
 
 
 ## Example Queries
