@@ -9,7 +9,7 @@ st.set_page_config(
 
 st.title("🤖 Text-to-SQL RAG System")
 
-API_URL = "http://127.0.0.1:8000/ask"
+API_URL = "https://text-to-sql-rag-system.onrender.com"
 
 token = st.text_input(
     "Authentication Token",
